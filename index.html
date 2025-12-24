@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KODPEN street COFFEE - Menu</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #fdf5e6; margin: 0; padding: 15px; color: #4a342e; }
+        header { text-align: center; padding: 20px 0; background: #6f4e37; color: white; border-radius: 15px; margin-bottom: 20px; }
+        h1 { margin: 0; font-size: 24px; }
+        .section-title { border-bottom: 2px solid #6f4e37; margin: 20px 0 10px; font-weight: bold; }
+        .menu-card { background: white; padding: 12px; margin-bottom: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .menu-info h4 { margin: 0; font-size: 16px; }
+        .menu-info p { margin: 2px 0 0; color: #888; font-size: 14px; }
+        .qty-controls { display: flex; align-items: center; gap: 10px; }
+        .qty-btn { background: #6f4e37; color: white; border: none; width: 30px; height: 30px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .qty-input { width: 30px; text-align: center; border: none; font-weight: bold; }
+        .footer-order { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 10px; }
+        .btn-kirim { background: #25d366; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .meja-input { padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
+        body { padding-bottom: 150px; } /* Memberi ruang untuk footer */
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>KODPEN street COFFEE</h1>
+    <p>Freshly Brewed for You</p>
+</header>
+
+<input type="number" id="no_meja" class="meja-input" placeholder="Masukkan Nomor Meja" style="width: 100%; box-sizing: border-box;">
+
+<div class="section-title">ICED COFFEE</div>
+<div id="iced-coffee-list"></div>
+
+<div class="section-title">NON COFFEE</div>
+<div id="non-coffee-list"></div>
+
+<div class="section-title">MANUAL BREW</div>
+<div id="manual-brew-list"></div>
+
+<div class="footer-order">
+    <button class="btn-kirim" onclick="kirimWhatsApp()">Kirim Order via WhatsApp</button>
+</div>
+
+<script>
+    const menuData = {
+        "Iced Coffee": [
+            { name: "Street Coffee", price: 15000 },
+            { name: "Americano", price: 15000 },
+            { name: "ButterStreet", price: 20000 },
+            { name: "Aren Royale", price: 20000 },
+            { name: "Pop Rock", price: 20000 }
+        ],
+        "Non Coffee": [
+            { name: "Chocolate", price: 18000 },
+            { name: "Matcha", price: 18000 },
+            { name: "Red Velvet", price: 18000 }
+        ],
+        "Manual Brew": [
+            { name: "Hot Coffee Milk", price: 13000 }
+        ]
+    };
+
+    function renderMenu() {
+        renderSection("iced-coffee-list", menuData["Iced Coffee"]);
+        renderSection("non-coffee-list", menuData["Non Coffee"]);
+        renderSection("manual-brew-list", menuData["Manual Brew"]);
+    }
+
+    function renderSection(elementId, items) {
+        const container = document.getElementById(elementId);
+        items.forEach((item, index) => {
+            const id = item.name.replace(/\s+/g, '-').toLowerCase();
+            container.innerHTML += `
+                <div class="menu-card">
+                    <div class="menu-info">
+                        <h4>${item.name}</h4>
+                        <p>Rp ${item.price.toLocaleString()}</p>
+                    </div>
+                    <div class="qty-controls">
+                        <button class="qty-btn" onclick="changeQty('${id}', -1)">-</button>
+                        <input type="number" id="${id}" class="qty-input" value="0" readonly>
+                        <button class="qty-btn" onclick="changeQty('${id}', 1)">+</button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function changeQty(id, delta) {
+        const input = document.getElementById(id);
+        let val = parseInt(input.value) + delta;
+        if (val < 0) val = 0;
+        input.value = val;
+    }
+
+    function kirimWhatsApp() {
+        const noMeja = document.getElementById('no_meja').value;
+        if (!noMeja) { alert("Tolong isi nomor meja dulu ya!"); return; }
+
+        let pesanan = "";
+        let totalHarga = 0;
+        
+        // Loop through all sections
+        Object.values(menuData).flat().forEach(item => {
+            const id = item.name.replace(/\s+/g, '-').toLowerCase();
+            const qty = document.getElementById(id).value;
+            if (qty > 0) {
+                pesanan += `- ${item.name} x${qty} (Rp ${(item.price * qty).toLocaleString()})\n`;
+                totalHarga += item.price * qty;
+            }
+        });
+
+        if (!pesanan) { alert("Pilih minimal satu menu!"); return; }
+
+        const sekarang = new Date();
+        const tgl = sekarang.toLocaleDateString('id-ID');
+        const jam = sekarang.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+        const teks = `*ORDER MASUK - KODPEN street COFFEE*\n` +
+                     `--------------------------\n` +
+                     `📅 Tanggal: ${tgl}\n` +
+                     `⏰ Jam: ${jam}\n` +
+                     `🪑 Meja: ${noMeja}\n` +
+                     `--------------------------\n` +
+                     `*Daftar Pesanan:*\n${pesanan}\n` +
+                     `*Total: Rp ${totalHarga.toLocaleString()}*\n` +
+                     `--------------------------\n` +
+                     `_Mohon segera diproses, terima kasih!_`;
+
+        const encodedTeks = encodeURIComponent(teks);
+        window.open(`https://wa.me/6288242212780?text=${encodedTeks}`, '_blank');
+    }
+
+    renderMenu();
+</script>
+
+</body>
+</html>
